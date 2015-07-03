@@ -111,6 +111,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 
 	if (!pAllocateVirtualMemory) {
 		printf("[-] Failed to resolve ZwAllocateVirtualMemory.");
+		return -1;
 	}
 	
 	DWORD pid = (DWORD) GetCurrentProcessId();
